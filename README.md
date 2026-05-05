@@ -60,8 +60,63 @@ Desenvolver uma solução IoT capaz de:
 - Ânodo → GPIO 26  
 - Cátodo → Resistor → GND  
 
+## 🔄 Modos de Operação
+
+### 🟢 Automático
+- Baseado no valor do LDR  
+- Escuro → LED ligado  
+- Claro → LED desligado  
+
+### 🔵 Manual
+- Controlado externamente  
+- Ignora o sensor  
+
 ---
 
-## 🌐 Endpoints da API
+## 🚀 Como Executar
 
-### 📍 Definir Threshold
+1. Abra o Wokwi  
+2. Monte o circuito  
+3. Cole o código no ESP32  
+4. Execute a simulação  
+5. Abra o monitor serial  
+6. Ajuste a luminosidade do LDR  
+
+---
+
+## 📊 Exemplo de Saída
+
+- LDR: 700
+- HTTP: 200
+- Modo: automático
+- Led: Apagado
+
+---
+
+## ⚠️ Problemas Comuns
+
+| Problema           | Solução               |
+|--------------------|----------------------|
+| WiFi não conecta   | Verifique SSID       |
+| Erro HTTP          | Verifique URL        |
+| LED não funciona   | Revise conexões      |
+| JSON inválido      | Verifique backend    |
+
+---
+
+## 📈 Melhorias Futuras
+
+- Interface web  
+- Dashboard em tempo real  
+- Banco de dados  
+- Notificações  
+- Suporte a múltiplos dispositivos  
+
+---
+
+## 🧠 Conceitos Aplicados
+
+- IoT (Internet das Coisas)  
+- Comunicação HTTP  
+- Cliente-servidor  
+- Automação  
