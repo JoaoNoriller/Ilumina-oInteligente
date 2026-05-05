@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Iluminação Inteligente</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 500;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .subtitulo {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 32px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      width: 100%;
+      max-width: 820px;
+    }
+
+    .card {
+      background: #1a1d27;
+      border: 1px solid #2a2d3a;
+      border-radius: 14px;
+      padding: 22px;
+    }
+
+    .card h2 {
+      font-size: 11px;
+      font-weight: 500;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      margin-bottom: 16px;
+    }
+
+    /* --- LED --- */
+    .led-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .led-bulb {
+      width: 70px; height: 70px;
+      border-radius: 50%;
+      background: #22253a;
+      border: 3px solid #2a2d3a;
+      font-size: 28px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.4s ease;
+    }
+
+    .led-bulb.on {
+      background: #f5c842;
+      border-color: #d4a800;
+      box-shadow: 0 0 28px #f5c84266, 0 0 56px #f5c84233;
+    }
+
+    .led-txt { font-size: 14px; font-weight: 500; color: #666; transition: color 0.3s; }
+    .led-txt.on { color: #f5c842; }
+
+    /* --- Luminosidade --- */
+    .num { font-size: 46px; font-weight: 300; color: #fff; line-height: 1; }
+    .num-label { font-size: 12px; color: #555; margin-top: 4px; }
+
+    .barra-bg {
+      margin-top: 14px; height: 8px;
+      background: #22253a; border-radius: 8px; overflow: hidden;
+    }
+    .barra-fill {
+      height: 100%; border-radius: 8px;
+      background: linear-gradient(90deg, #3b82f6, #f5c842);
+      transition: width 0.5s ease;
+    }
+
+    /* --- Modo --- */
+    .toggle-row { display: flex; gap: 8px; }
+
+    .btn-modo {
+      flex: 1; padding: 10px 6px;
+      border: 1px solid #2a2d3a;
+      border-radius: 8px;
+      background: #22253a;
+      color: #666; font-size: 13px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-modo.on { background: #3b4fd8; border-color: #3b4fd8; color: #fff; }
+
+    /* --- Controle manual --- */
+    .aviso { font-size: 11px; color: #555; margin-bottom: 10px; }
+
+    .btn-led {
+      width: 100%; padding: 11px;
+      border: none; border-radius: 8px;
+      font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 0.2s;
+      margin-bottom: 8px;
+    }
+    .btn-on  { background: #f5c842; color: #1a1000; }
+    .btn-off { background: #22253a; color: #888; border: 1px solid #2a2d3a; }
+    .btn-led:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* --- Threshold --- */
+    .slider-row {
+      display: flex; align-items: center; gap: 10px; margin-top: 8px;
+    }
+    input[type=range] { flex: 1; accent-color: #3b4fd8; }
+    .th-val { font-size: 15px; font-weight: 500; color: #fff; min-width: 38px; text-align: right; }
+
+    .btn-salvar {
+      width: 100%; margin-top: 12px; padding: 10px;
+      background: #3b4fd8; color: #fff;
+      border: none; border-radius: 8px;
+      font-size: 13px; cursor: pointer; transition: background 0.2s;
+    }
+    .btn-salvar:hover { background: #2d3fb0; }
+
+    /* --- Mensagem --- */
+    .mensagem {
+      width: 100%; max-width: 820px;
+      margin-top: 16px; padding: 12px 16px;
+      background: #1a1d27; border: 1px solid #2a2d3a;
+      border-radius: 10px; font-size: 13px; color: #888; min-height: 42px;
+    }
+
+    .tag-auto   { color: #60a5fa; }
+    .tag-manual { color: #fbbf24; }
+  </style>
+</head>
+<body>
+
+  <h1>💡 Iluminação Inteligente</h1>
+  <p class="subtitulo">IoT — Arduino + Spring Boot</p>
+
+  <div class="grid">
+
+    <!-- CARD: Estado do LED -->
+    <div class="card">
+      <h2>Estado do LED</h2>
+      <div class="led-wrap">
+        <div class="led-bulb" id="ledBulb">💡</div>
+        <span class="led-txt" id="ledTxt">Apagado</span>
+      </div>
+    </div>
+
+    <!-- CARD: Luminosidade -->
+    <div class="card">
+      <h2>Luminosidade atual</h2>
+      <div class="num" id="numLux">—</div>
+      <div class="num-label">leitura analógica (0 – 1023)</div>
+      <div class="barra-bg">
+        <div class="barra-fill" id="barraFill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- CARD: Modo -->
+    <div class="card">
+      <h2>Modo de operação</h2>
+      <div class="toggle-row">
+        <button class="btn-modo on" id="btnAuto"   onclick="alterarModo('automatico')">🤖 Automático</button>
+        <button class="btn-modo"   id="btnManual"  onclick="alterarModo('manual')">✋ Manual</button>
+      </div>
+    </div>
+
+    <!-- CARD: Controle manual -->
+    <div class="card">
+      <h2>Controle manual</h2>
+      <p class="aviso">Disponível apenas no modo manual</p>
+      <button class="btn-led btn-on"  id="btnLigar"  onclick="controlarLed(true)"  disabled>☀️ Ligar LED</button>
+      <button class="btn-led btn-off" id="btnApagar" onclick="controlarLed(false)" disabled>🌙 Apagar LED</button>
+    </div>
+
+    <!-- CARD: Threshold (ocupa linha inteira) -->
+    <div class="card" style="grid-column: 1 / -1">
+      <h2>Limite de luminosidade (threshold)</h2>
+      <p class="aviso" style="margin-bottom:10px">
+        Abaixo deste valor o sistema considera o ambiente escuro e liga o LED automaticamente
+      </p>
+      <div class="slider-row">
+        <span style="font-size:11px;color:#555">0</span>
+        <input type="range" id="slider" min="0" max="1023" value="500"
+               oninput="document.getElementById('thVal').textContent = this.value"/>
+        <span style="font-size:11px;color:#555">1023</span>
+        <span class="th-val" id="thVal">500</span>
+      </div>
+      <button class="btn-salvar" onclick="salvarThreshold()">💾 Salvar threshold</button>
+    </div>
+
+  </div>
+
+  <!-- Mensagem de status -->
+  <div class="mensagem" id="msgBox">Conectando ao sistema...</div>
+
+  <script>
+    // Se estiver usando Ngrok, troque '' pela URL do Ngrok aqui:
+    // Exemplo: const BASE = 'https://abc123.ngrok-free.app';
+    const BASE = '';
+
+    // Atualiza toda a interface com os dados recebidos do backend
+    function atualizar(d) {
+      const ligado = d.ledLigado;
+      const isAuto = d.modo === 'automatico';
+
+      // LED visual
+      document.getElementById('ledBulb').classList.toggle('on', ligado);
+      document.getElementById('ledTxt').textContent = ligado ? 'Ligado' : 'Apagado';
+      document.getElementById('ledTxt').classList.toggle('on', ligado);
+
+      // Barra de luminosidade
+      document.getElementById('numLux').textContent = d.luminosidade;
+      document.getElementById('barraFill').style.width = (d.luminosidade / 1023 * 100).toFixed(1) + '%';
+
+      // Botões de modo
+      document.getElementById('btnAuto').classList.toggle('on',  isAuto);
+      document.getElementById('btnManual').classList.toggle('on', !isAuto);
+
+      // Botões manuais: habilitados só no modo manual
+      document.getElementById('btnLigar').disabled  = isAuto;
+      document.getElementById('btnApagar').disabled = isAuto;
+
+      // Threshold
+      document.getElementById('slider').value = d.threshold;
+      document.getElementById('thVal').textContent = d.threshold;
+
+      // Mensagem de status
+      const tag = isAuto
+        ? '<span class="tag-auto">🤖 Automático</span>'
+        : '<span class="tag-manual">✋ Manual</span>';
+      document.getElementById('msgBox').innerHTML = tag + ' &mdash; ' + (d.mensagem || '');
+    }
+
+    // Consulta o estado atual do backend
+    async function buscarEstado() {
+      try {
+        const r = await fetch(BASE + '/estado');
+        atualizar(await r.json());
+      } catch {
+        document.getElementById('msgBox').textContent =
+          '⚠️ Sem conexão com o backend. Verifique se o Spring Boot está rodando.';
+      }
+    }
+
+    async function alterarModo(modo) {
+      const r = await fetch(BASE + '/modo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ modo })
+      });
+      atualizar(await r.json());
+    }
+
+    async function controlarLed(ligado) {
+      const r = await fetch(BASE + '/led', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ligado })
+      });
+      atualizar(await r.json());
+    }
+
+    async function salvarThreshold() {
+      const valor = parseInt(document.getElementById('slider').value);
+      const r = await fetch(BASE + '/config/threshold', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ valor })
+      });
+      atualizar(await r.json());
+    }
+
+    // Atualiza a cada 2 segundos automaticamente
+    buscarEstado();
+    setInterval(buscarEstado, 2000);
+  </script>
+
+</body>
+</html>
