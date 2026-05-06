@@ -1,0 +1,85 @@
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
+
+const char* SSID        = "Wokwi-GUEST";
+const char* PASSWORD    = "";
+const char* BACKEND_URL = "https://brief-crossing-balanced-llc.trycloudflare.com";
+
+const int PINO_LDR     = 34;
+const int PINO_LED     = 26;
+const int INTERVALO_MS = 2000;
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(PINO_LED, OUTPUT);
+
+  // Pisca 3x para confirmar que o LED está funcionando
+  Serial.println("Testando LED...");
+  for (int i = 0; i < 3; i++) {
+    digitalWrite(PINO_LED, HIGH); delay(300);
+    digitalWrite(PINO_LED, LOW);  delay(300);
+  }
+  Serial.println("LED OK!");
+
+  Serial.println("Conectando WiFi...");
+  WiFi.begin(SSID, PASSWORD);
+  int t = 0;
+  while (WiFi.status() != WL_CONNECTED && t < 20) {
+    delay(500); Serial.print("."); t++;
+  }
+  Serial.println("\nWiFi conectado!");
+
+  // Define threshold inicial para 500
+  HTTPClient http;
+  http.begin(String(BACKEND_URL) + "/config/threshold");
+  http.addHeader("Content-Type", "application/json");
+  http.addHeader("cf-access-client-id", "bypass");
+  http.POST("{\"valor\":500}");
+  http.end();
+  Serial.println("Threshold definido: 500");
+}
+
+void loop() {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFi perdido, aguardando...");
+    delay(3000);
+    return;
+  }
+
+  // Envia luminosidade e recebe decisão do backend
+  int luminosidade = analogRead(PINO_LDR);
+
+  HTTPClient http;
+  http.begin(String(BACKEND_URL) + "/sensor/luminosidade");
+  http.addHeader("Content-Type", "application/json");
+  http.addHeader("cf-access-client-id", "bypass");
+
+  int httpCode = http.POST("{\"valor\":" + String(luminosidade) + "}");
+
+  Serial.println("----------------------------");
+  Serial.print("LDR: "); Serial.println(luminosidade);
+  Serial.print("HTTP: "); Serial.println(httpCode);
+
+  if (httpCode == 200) {
+    StaticJsonDocument<512> doc;
+    deserializeJson(doc, http.getString());
+
+    bool   ledLigado = doc["ledLigado"];
+    String modo      = doc["modo"].as<String>();
+
+    Serial.print("Modo: ");  Serial.println(modo);
+    Serial.println(ledLigado ? "LED: LIGADO" : "LED: APAGADO");
+
+    // Aciona o LED conforme decisão do backend
+    // No modo manual obedece o frontend
+    // No modo automático obedece o LDR
+    digitalWrite(PINO_LED, ledLigado ? HIGH : LOW);
+
+  } else {
+    Serial.println("Erro! Verifique a URL do Cloudflare.");
+  }
+
+  http.end();
+  delay(INTERVALO_MS);
+}

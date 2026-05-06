@@ -123,3 +123,4 @@ Desenvolver uma solução IoT capaz de:
 
 ## Imagem do circuíto eletrônico Wokwi
 ![alt text](image.png)
+
