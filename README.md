@@ -120,3 +120,6 @@ Desenvolver uma solução IoT capaz de:
 - Comunicação HTTP  
 - Cliente-servidor  
 - Automação  
+
+## Imagem do circuíto eletrônico Wokwi
+![alt text](image.png)
